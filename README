@@ -1,0 +1,159 @@
+# Customer Transaction and Churn Analysis
+This project provides a set of functions for reading, processing, and analyzing customer transaction data from CSV files. The code includes tasks for loading data, converting files to Parquet format, aggregating transactions, identifying high-risk transactions, calculating cumulative balances, generating monthly transaction metrics, calculating average transactions per customer, and predicting customer churn using logistic regression.
+
+This project provides functions using the ETL process for analysing customer transaction data from CSV files. The code shows how during the transformation stage, we changed the file format to parquets as well as:
+- Aggregating transactions
+- Identifying high-risk transactions
+- Calculating cumulative balances
+- Generating monthly transaction metrics
+- Calculating average transactions per customer
+- Predicting customer churn using logistic regression
+
+## Table of Contents
+1. [Dependencies](#dependencies)
+2. [Function Descriptions](#function-descriptions)
+   - [read_csv_file](#read_csv_file)
+   - [comparing_columns](#comparing_columns)
+   - [convert_file_into_parquet](#convert_file_into_parquet)
+   - [aggregate_transactions_by_acc](#aggregate_transactions_by_acc)
+   - [identify_high_risk_transactions](#identify_high_risk_transactions)
+   - [cumulative_balances](#cumulative_balances)
+   - [monthly_transactions](#monthly_transactions)
+   - [average_transaction_per_customer](#average_transaction_per_customer)
+   - [customer_churn](#customer_churn)
+3. [Usage](#usage)
+
+## Dependencies
+
+The following Python libraries are required to run the code:
+- `pandas`
+- `matplotlib`
+- `scikit-learn`
+- `imblearn`
+- `pyarrow`
+
+## Function Descriptions
+# *Data PreProcessing*
+# 'read_csv_file'
+Reads multiple CSV files and returns their content as a list of DataFrames. Strips white spaces from column names.
+
+Parameters:
+
+file_paths (list): List of paths to the CSV files.
+Returns:
+
+List of DataFrames.
+
+# comparing_columns
+Compares the number of rows and columns between two DataFrames.
+
+Parameters:
+
+original_df (DataFrame): Original DataFrame.
+cleaned_df (DataFrame): Cleaned DataFrame.
+Returns:
+
+Boolean indicating whether the DataFrames have the same shape.
+# convert_file_into_parquet
+Converts a list of DataFrames to Parquet format and saves them to a specified directory.
+
+Parameters:
+
+data_frames (list): List of DataFrames.
+file_location (str): Directory where Parquet files will be saved.
+
+# *Transaction Activity*
+# aggregate_transactions_by_acc
+Aggregates transaction amounts by account type and customer ID, then saves the aggregated data to a Parquet file.
+
+Parameters:
+
+file1 (str): Path to the first transactions Parquet file.
+file2 (str): Path to the second transactions Parquet file.
+file3 (str): Path to the customers Parquet file.
+Returns:
+
+Aggregated DataFrame.
+# identify_high_risk_transactions
+Identifies high-risk transactions (amount greater than a specified value) and saves the results to a Parquet file.
+
+Parameters:
+
+transactions_df (DataFrame): Transactions DataFrame.
+amount (int, optional): Amount threshold to identify high-risk transactions. Defaults to 10000.
+Returns:
+
+DataFrame of high-risk transactions.
+# cumulative_balances
+Calculates cumulative balances for each account based on transactions and saves the results to a Parquet file.
+
+Parameters:
+
+accounts_file (str): Path to the accounts Parquet file.
+transaction_file (str): Path to the transactions Parquet file.
+Returns:
+
+Dictionary of cumulative balances per account.
+# monthly_transactions
+Generates monthly transaction metrics (total amount, average amount, transaction count) and saves the results to a Parquet file.
+
+Parameters:
+
+transactions_file (str): Path to the transactions Parquet file.
+Returns:
+
+DataFrame of monthly transaction metrics.
+# average_transaction_per_customer
+Calculates the average transaction amount per customer and saves the results to a Parquet file.
+
+Parameters:
+
+transactions_file (str): Path to the transactions Parquet file.
+customers_file (str): Path to the customers Parquet file.
+Returns:
+
+DataFrame of average transaction amount per customer.
+# customer_churn
+Predicts customer churn based on transaction and customer data using logistic regression.
+
+Parameters:
+
+transactions_file (str): Path to the transactions Parquet file.
+customers_file (str): Path to the customers Parquet file.
+threshold_days_list (list, optional): List of days to consider for churn. Defaults to [30, 60, 90].
+Returns:
+
+Trained logistic regression model.
+
+# Reading CSV files
+csv_files = ['../landing/accounts.csv', "../landing/customers.csv", "../landing/transactions.csv"]
+loaded_data = read_csv_file(csv_files)
+
+# Converting CSV files to Parquet
+output_directory = "../staging"
+convert_file_into_parquet(loaded_data, output_directory)
+
+# Aggregating transactions
+file1 = "../staging/accounts.csv_cleaned.parquet"
+file2 = "../staging/transactions.csv_cleaned.parquet"
+file3 = "../staging/customers.csv_cleaned.parquet"
+aggregated_data = aggregate_transactions_by_acc(file1, file2, file3)
+
+# Identifying high-risk transactions
+transactions_df = pd.read_parquet(file2)
+high_risk_df = identify_high_risk_transactions(transactions_df)
+
+# Calculating cumulative balances
+accounts_file = "../staging/accounts.csv_cleaned.parquet"
+transactions_file = "../staging/transactions.csv_cleaned.parquet"
+cumulative_balances_dict = cumulative_balances(accounts_file, transactions_file)
+
+# Generating monthly transaction metrics
+monthly_metrics_df = monthly_transactions(transactions_file)
+
+# Calculating average transaction amount per customer
+customers_file = "../staging/customers.csv_cleaned.parquet"
+avg_transaction_per_customer = average_transaction_per_customer(transactions_file, customers_file)
+
+# Predicting customer churn
+trained_model = customer_churn(transactions_file, customers_file)
