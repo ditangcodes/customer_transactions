@@ -33,7 +33,6 @@ The following Python libraries are required to run the code:
 - `pyarrow`
 
 ## Function Descriptions
-# *Data PreProcessing*
 # 'read_csv_file'
 Reads multiple CSV files and returns their content as a list of DataFrames. Strips white spaces from column names.
 
@@ -61,17 +60,33 @@ Parameters:
 
 data_frames (list): List of DataFrames.
 file_location (str): Directory where Parquet files will be saved.
-
-# *Transaction Activity*
 # aggregate_transactions_by_acc
-Aggregates transaction amounts by account type and customer ID, then saves the aggregated data to a Parquet file.
+# Optimizing Aggregation of Transaction Data
+When working with large datasets to aggregate transaction information, consider the following best practices:
 
-Parameters:
-
-file1 (str): Path to the first transactions Parquet file.
-file2 (str): Path to the second transactions Parquet file.
-file3 (str): Path to the customers Parquet file.
-Returns:
+Efficient Memory Usage:
+Loading extensive Parquet files into memory can strain resources. To optimize memory usage:
+Dask: Explore using Dask, a tool that handles large datasets efficiently by performing computations out-of-core (without loading everything into memory at once).
+If memory remains an issue, read the data in smaller chunks (e.g., using the chunksize parameter in pd.read_parquet).
+Select Relevant Columns:
+When merging different datasets (DataFrames), focus on essential columns:
+For your use case, consider loading only the following columns: ‘customer_id’, ‘account_type’, ‘transaction_type’, and ‘amount’.
+This reduces memory usage and speeds up processing.
+Merge Smartly:
+Instead of merging DataFrames multiple times, do it in a single step:
+Use the merge function with all three DataFrames, specifying the join keys (e.g., ‘customer_id’).
+This approach is more efficient and avoids unnecessary intermediate steps.
+Parallelization for Speed:
+If your dataset is substantial, consider parallelizing the aggregation process:
+Tools like Dask or multiprocessing allow you to split the work across multiple cores or even machines.
+Parallelization speeds up computation, especially for resource-intensive tasks.
+Compress Your Data:
+When saving the aggregated data to a file (e.g., Parquet), use compression:
+Consider Snappy or Gzip compression algorithms.
+Compression reduces the file size, making it faster to read and transfer.
+Optimize Indexing:
+If you frequently search or filter data based on specific columns (e.g., ‘customer_id’ or ‘account_type’), consider setting appropriate indexes:
+Indexing significantly improves query performance.
 
 Aggregated DataFrame.
 # identify_high_risk_transactions
@@ -113,17 +128,57 @@ customers_file (str): Path to the customers Parquet file.
 Returns:
 
 DataFrame of average transaction amount per customer.
-# customer_churn
+# Churn Detection Model
 Predicts customer churn based on transaction and customer data using logistic regression.
 
-Parameters:
 
-transactions_file (str): Path to the transactions Parquet file.
-customers_file (str): Path to the customers Parquet file.
-threshold_days_list (list, optional): List of days to consider for churn. Defaults to [30, 60, 90].
-Returns:
+This script trains a churn detection model using customer and transaction data. The model predicts whether a customer is likely to churn based on their transaction history.
 
-Trained logistic regression model.
+Step-by-Step Explanation:
+Load Data:
+
+We load the transactions and customers data from Parquet files into Pandas DataFrames.
+Merge Data:
+
+We combine the transactions and customers data into a single DataFrame based on common account IDs.
+Calculate Last Transaction Date:
+
+For each account, we find the date of the last transaction.
+Prepare Data for Churn Calculation:
+
+We merge the last transaction dates back into the main DataFrame.
+We clean up any extra spaces and convert date columns to proper date formats.
+Calculate Days Since Last Transaction and Join Date:
+
+We calculate how many days have passed since the last transaction and since the customer joined.
+Determine Churn:
+
+For each threshold (30, 60, 90 days), we mark customers as churned if they haven’t made a transaction within that period.
+We combine all these cases into a single DataFrame.
+Check Data Balance:
+
+We ensure the dataset has both churned and non-churned examples. If not, an error is raised.
+Split Data into Training and Test Sets:
+
+We split the data into training and test sets.
+Train the Model:
+
+We train a logistic regression model on the training set.
+Evaluate the Model:
+
+We make predictions on the test set and calculate the model’s accuracy.
+Save the Model:
+
+The trained model is saved for future use.
+Example Data:
+We use example data to simulate real scenarios:
+
+Accounts Data:
+Information about accounts, including their IDs, customer IDs, types, balances, and creation dates.
+Customers Data:
+Information about customers, including their IDs, names, emails, and join dates.
+Transactions Data:
+Information about transactions, including transaction IDs, account IDs, dates, amounts, and types.
 
 # Reading CSV files
 csv_files = ['../landing/accounts.csv', "../landing/customers.csv", "../landing/transactions.csv"]
